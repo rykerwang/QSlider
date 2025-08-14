@@ -73,4 +73,13 @@ public struct QSlider: View {
         }
         .frame(height: max(trackHeight, thumbSize))
     }
+
+    public func setValue(_ newValue: Double) {
+        // 确保新值在范围内
+        value = min(max(newValue, range.lowerBound), range.upperBound)
+    }
+
+    public func getValue() -> Double {
+        return value
+    }
 }

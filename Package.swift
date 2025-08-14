@@ -6,8 +6,8 @@ import PackageDescription
 let package = Package(
     name: "QSlider",
     platforms: [
-        .iOS(.v13),       // SwiftUI 从 iOS 13 开始
-        .macOS(.v12)   // macOS 从 11 开始
+        .iOS(.v15),       // SwiftUI from iOS 15
+        .macOS(.v12)   // macOS from 12
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.

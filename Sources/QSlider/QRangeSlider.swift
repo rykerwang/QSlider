@@ -1,20 +1,20 @@
 import SwiftUI
 
 public struct QRangeSlider: View {
-    // 绑定值
+    // Bound values
     @Binding public var lowerValue: Double
     @Binding public var upperValue: Double
 
-    // 基本配置
+    // Basic configuration
     public var range: ClosedRange<Double> = 0...100
     public var trackHeight: CGFloat = 8
 
-    // 轨道颜色（左段 / 中间选中段 / 右段）
+    // Track colors (left segment / selected segment / right segment)
     public var leftTrackColor: Color = .gray.opacity(0.3)
     public var selectedTrackColor: Color = .blue
     public var rightTrackColor: Color = .gray.opacity(0.3)
 
-    // 左右 thumb 外观
+    // Thumb appearance (left/right)
     public var thumbSize: CGFloat = 28
     public var leftThumbColor: Color = .white
     public var rightThumbColor: Color = .white
@@ -23,7 +23,7 @@ public struct QRangeSlider: View {
     public var leftThumbIconColor: Color = .black
     public var rightThumbIconColor: Color = .black
 
-    // 可选：最小/最大差值限制（单位与 range 一致）
+    // Optional: min/max gap limit (unit same as range)
     public var minGap: Double? = nil
     public var maxGap: Double? = nil
 
@@ -69,33 +69,33 @@ public struct QRangeSlider: View {
             let usableWidth = max(totalWidth - thumbSize, 1)
             let span = (range.upperBound - range.lowerBound)
 
-            // 当前值 -> x 偏移
+            // Current value -> x offset
             let xLower = CGFloat((lowerValue - range.lowerBound) / span) * usableWidth
             let xUpper = CGFloat((upperValue - range.lowerBound) / span) * usableWidth
 
-            // 防止视觉重叠的最小间距（当未设置 minGap 时）
+            // Minimum visual gap to prevent overlap (when minGap is not set)
             let visualMinGapValue = Double(thumbSize / usableWidth) * span
 
             ZStack(alignment: .leading) {
-                // 左段（range.lower...lowerValue）
+                // Left segment (range.lower...lowerValue)
                 Capsule()
                     .fill(leftTrackColor)
                     .frame(width: xLower + thumbSize/2, height: trackHeight)
                     .alignmentGuide(.leading) { _ in 0 }
 
-                // 中段（lowerValue...upperValue）
+                // Middle segment (lowerValue...upperValue)
                 Capsule()
                     .fill(selectedTrackColor)
                     .frame(width: max(xUpper - xLower, 0), height: trackHeight)
                     .offset(x: xLower + thumbSize/2)
 
-                // 右段（upperValue...range.upper）
+                // Right segment (upperValue...range.upper)
                 Capsule()
                     .fill(rightTrackColor)
                     .frame(width: max(usableWidth - xUpper, 0), height: trackHeight)
                     .offset(x: xUpper + thumbSize/2)
 
-                // 左 thumb
+                // Left thumb
                 thumbView(color: leftThumbColor, icon: leftThumbIcon, iconColor: leftThumbIconColor)
                     .frame(width: thumbSize, height: thumbSize)
                     .offset(x: xLower)
@@ -113,7 +113,7 @@ public struct QRangeSlider: View {
                             }
                     )
 
-                // 右 thumb
+                // Right thumb
                 thumbView(color: rightThumbColor, icon: rightThumbIcon, iconColor: rightThumbIconColor)
                     .frame(width: thumbSize, height: thumbSize)
                     .offset(x: xUpper)
@@ -135,7 +135,6 @@ public struct QRangeSlider: View {
         }
         .frame(height: max(trackHeight, thumbSize))
         .onChange(of: lowerValue) { new in
-            // 保证初始值也满足约束
             lowerValue = clampLower(new, currentUpper: upperValue, span: range.upperBound - range.lowerBound, visualMinGapValue: 0)
         }
         .onChange(of: upperValue) { new in
@@ -143,7 +142,6 @@ public struct QRangeSlider: View {
         }
     }
 
-    // MARK: - 视图与工具
 
     private func thumbView(color: Color, icon: String?, iconColor: Color) -> some View {
         ZStack {
@@ -158,45 +156,45 @@ public struct QRangeSlider: View {
                     .foregroundStyle(iconColor)
             }
         }
-        .contentShape(Rectangle()) // 增大可点区域
+        .contentShape(Rectangle()) // Increase tappable area
     }
 
     private func clampLower(_ proposed: Double, currentUpper: Double, span: Double, visualMinGapValue: Double) -> Double {
         var v = proposed
-        // 基础边界
+        // Basic bounds
         v = max(range.lowerBound, min(v, currentUpper))
 
-        // 应用 minGap（优先使用显式 minGap，否则用视觉最小间距防止重叠）
+        // Apply minGap (prefer explicit minGap, otherwise use visual min gap to prevent overlap)
         let minGapValue = (minGap ?? 0) > 0 ? (minGap ?? 0) : max(visualMinGapValue, 0)
         v = min(v, currentUpper - minGapValue)
 
-        // 应用 maxGap（上限差值）
+        // Apply maxGap (upper limit of gap)
         if let maxGap, maxGap > 0 {
             v = max(v, currentUpper - maxGap)
         }
-        // 再次夹取到总范围
+        // Clamp again to total range
         return min(max(v, range.lowerBound), currentUpper)
     }
 
     private func clampUpper(_ proposed: Double, currentLower: Double, span: Double, visualMinGapValue: Double) -> Double {
         var v = proposed
-        // 基础边界
+        // Basic bounds
         v = min(range.upperBound, max(v, currentLower))
 
-        // 应用 minGap（优先使用显式 minGap，否则用视觉最小间距防止重叠）
+        // Apply minGap (prefer explicit minGap, otherwise use visual min gap to prevent overlap)
         let minGapValue = (minGap ?? 0) > 0 ? (minGap ?? 0) : max(visualMinGapValue, 0)
         v = max(v, currentLower + minGapValue)
 
-        // 应用 maxGap（上限差值）
+        // Apply maxGap (upper limit of gap)
         if let maxGap, maxGap > 0 {
             v = min(v, currentLower + maxGap)
         }
-        // 再次夹取到总范围
+        // Clamp again to total range
         return max(min(v, range.upperBound), currentLower)
     }
 
     public func setValue(lower: Double, upper: Double) {
-        // 设置值时，确保在范围内
+        // When setting values, ensure they are within range
         lowerValue = clampLower(lower, currentUpper: upperValue, span: range.upperBound - range.lowerBound, visualMinGapValue: 0)
         upperValue = clampUpper(upper, currentLower: lowerValue, span: range.upperBound - range.lowerBound, visualMinGapValue: 0)
     }
